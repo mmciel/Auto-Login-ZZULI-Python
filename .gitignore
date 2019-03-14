@@ -1,0 +1,6 @@
+/.idea
+/venv
+/__pycache__
+/build
+login_data.ini
+AutoLoginZZULInetV1.3.spec
