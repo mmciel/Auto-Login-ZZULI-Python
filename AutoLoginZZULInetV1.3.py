@@ -74,39 +74,45 @@ dynamic_R6_data = ['0', '1','2']
 
 
 def get_url():
-    static_response = requests.get(static_url, headers=headers)
-    static_response_302_str = str(static_response.url)
-    # 从静态链接302中的跳转页面获取信，用于构造真实的登录页面地址
-    static_response_302_dict = dict(parse_qs(urlsplit(static_response.url).query))
-    # 写入请求参数
-    get_par['wlanuserip'] = static_response_302_dict['wlanuserip'][0]
-    get_par['wlanacip'] = static_response_302_dict['wlanacip'][0]
-    get_par['ip'] = static_response_302_dict['wlanuserip'][0]
-    print("成功截获wlanuserip服务器："+get_par['wlanuserip'])
-    print("成功截获wlanacip服务器：" + get_par['wlanacip'])
-    real_url_head_str = "http://10.168.6.10/a70.htm?"
-    real_url_par_str = 'wlanuserip=' + str(get_par['wlanuserip']) + \
-                       '&wlanacip=' + str(get_par['wlanacip']) + \
-                       '&wlanacname=' + str(get_par['wlanacname']) + \
-                       '&vlanid=' + str(get_par['vlanid']) + \
-                       '&ip=' + str(get_par['wlanuserip']) + \
-                       '&ssid=' + str(get_par['ssid']) + \
-                       '&areaID=' + str(get_par['areaID']) + \
-                       '&mac=' + str(get_par['mac'])
-    real_url = real_url_head_str + real_url_par_str
-    login_headers["Referer"] = real_url
-    post_par["wlanuserip"] = get_par["wlanuserip"]
-    post_par["wlanacip"] = get_par["wlanacip"]
-    post_par["ip"] = get_par["ip"]
-    r_url_head = "http://10.168.6.10:801/eportal/?c=ACSetting&a=Login&protocol=http:"
-    r_url_par = "&hostname=" + post_par["hostname"] + "&iTermType=" + post_par["iTermType"] + \
-                "&wlanuserip=" + post_par["wlanuserip"] + "&wlanacip=" + post_par["wlanacip"] + \
-                "&mac=" + post_par["mac"] + "&ip=" + post_par["ip"] + \
-                "&enAdvert=" + post_par["enAdvert"] + "&queryACIP=" + post_par["queryACIP"] + \
-                "&loginMethod=" + post_par["loginMethod"]
-    r_url = r_url_head + r_url_par
+    try:
+        static_response = requests.get(static_url, headers=headers)
 
-    return r_url
+        static_response_302_str = str(static_response.url)
+        # 从静态链接302中的跳转页面获取信，用于构造真实的登录页面地址
+        static_response_302_dict = dict(parse_qs(urlsplit(static_response.url).query))
+        # 写入请求参数
+        get_par['wlanuserip'] = static_response_302_dict['wlanuserip'][0]
+        get_par['wlanacip'] = static_response_302_dict['wlanacip'][0]
+        get_par['ip'] = static_response_302_dict['wlanuserip'][0]
+        print("成功截获wlanuserip服务器："+get_par['wlanuserip'])
+        print("成功截获wlanacip服务器：" + get_par['wlanacip'])
+        real_url_head_str = "http://10.168.6.10/a70.htm?"
+        real_url_par_str = 'wlanuserip=' + str(get_par['wlanuserip']) + \
+                           '&wlanacip=' + str(get_par['wlanacip']) + \
+                           '&wlanacname=' + str(get_par['wlanacname']) + \
+                           '&vlanid=' + str(get_par['vlanid']) + \
+                           '&ip=' + str(get_par['wlanuserip']) + \
+                           '&ssid=' + str(get_par['ssid']) + \
+                           '&areaID=' + str(get_par['areaID']) + \
+                           '&mac=' + str(get_par['mac'])
+        real_url = real_url_head_str + real_url_par_str
+        print("构造Referer："+real_url)
+        login_headers["Referer"] = real_url
+        post_par["wlanuserip"] = get_par["wlanuserip"]
+        post_par["wlanacip"] = get_par["wlanacip"]
+        post_par["ip"] = get_par["ip"]
+        r_url_head = "http://10.168.6.10:801/eportal/?c=ACSetting&a=Login&protocol=http:"
+        r_url_par = "&hostname=" + post_par["hostname"] + "&iTermType=" + post_par["iTermType"] + \
+                    "&wlanuserip=" + post_par["wlanuserip"] + "&wlanacip=" + post_par["wlanacip"] + \
+                    "&mac=" + post_par["mac"] + "&ip=" + post_par["ip"] + \
+                    "&enAdvert=" + post_par["enAdvert"] + "&queryACIP=" + post_par["queryACIP"] + \
+                    "&loginMethod=" + post_par["loginMethod"]
+        r_url = r_url_head + r_url_par
+        print("登录地址："+r_url)
+        return r_url
+    except:
+        print("远程服务器无响应...请检查硬件与驱动！")
+        return ""
 def set_login_data():
     """
     配置登录信息
@@ -146,6 +152,7 @@ def get_login_data():
         f = open(file_path)
         for line in f.readlines():
             temp.append(line.strip('\n'))
+        print("登录账号："+str(temp[0]))
         f.close()
         return temp
     except IOError:
@@ -187,14 +194,15 @@ def login(temp_url, temp_data, temp_headers):
     """
     requests.post(temp_url, data=temp_data, headers=temp_headers)
     time.sleep(1)
-    if is_net_ok():
-        return True
-    else:
+    num = 1
+    while not is_net_ok():
+        print("发现账号登录异常，正在尝试第"+str(num+1)+"次...")
         requests.post(temp_url, data=temp_data, headers=temp_headers)
         time.sleep(1)
-        return is_net_ok()
-    pass
-
+        num = num+1
+        if num == 3 :
+            return False
+    return True
 def word():
     """
     工具说明
@@ -238,25 +246,26 @@ if __name__ == '__main__':
 
         # 获取url
         URL = get_url()
+        if not URL=="":
 
-        # 这里是由于不知道R6参数的含义，只能反复提交参数，有一个能命中就行了
-        for i in range(len(dynamic_R6_data)):
-            print("正在尝试登录参数：R" + dynamic_R6_data[i])
+            # 这里是由于不知道R6参数的含义，只能反复提交参数，有一个能命中就行了
+            for i in range(len(dynamic_R6_data)):
+                print("正在尝试登录参数：R" + dynamic_R6_data[i])
 
-            user_post["DDDDD"] = "," + dynamic_R6_data[i] + "," + login_data[0] + "@" + login_data[2]
-            user_post["upass"] = login_data[1]
-            user_post["R6"] = dynamic_R6_data[i]
+                user_post["DDDDD"] = "," + dynamic_R6_data[i] + "," + login_data[0] + "@" + login_data[2]
+                user_post["upass"] = login_data[1]
+                user_post["R6"] = dynamic_R6_data[i]
 
-            if login(URL, user_post, login_headers):
-                flag = True
-                break
+                if login(URL, user_post, login_headers):
+                    flag = True
+                    break
+                else:
+                    continue
+
+            if flag:
+                print("联网成功！ 1秒后关闭程序...")
+                time.sleep(2)
             else:
-                continue
-
-        if flag:
-            print("联网成功！ 1秒后关闭程序...")
-            time.sleep(2)
-        else:
-            print("联网失败！ 1秒后关闭程序...")
-            time.sleep(2)
+                print("联网失败！ 1秒后关闭程序...")
+                time.sleep(2)
 pass
