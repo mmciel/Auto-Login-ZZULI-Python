@@ -218,11 +218,12 @@ def word():
     print("1.首次启动请使用管理员方式启动程序，因为生成配置文件需要权限。")
     print("2.配置完成后目录下会生成login_data.ini文件谨慎删除，删除需要重新配置")
     print("3.配置信息有误删除login_data.ini文件后重新配置即可")
+    print("4.程序源码、更新等关注微信公众号：并非一无所有")
     print("=====================================================================")
 
 if __name__ == '__main__':
     print("======================Auto Login ZZULI Net V1.3======================\n")
-    print("                                           by:mmciel 761998179@qq.com\n")
+    print("                                          by:mmciel 761998179@qq.com \n")
     word()
     if os.access(file_path, os.F_OK):
         print("正在读取配置文件...")
