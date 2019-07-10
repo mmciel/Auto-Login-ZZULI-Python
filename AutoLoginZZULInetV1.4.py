@@ -2,6 +2,7 @@
 ZZULI校园网自动连接程序
 author:mmciel
 time:2019-6-19 22:46:48
+end-time：2019-7-10 19:30:32
 version:1.4
 update：
     1.3太慢了，等不及了，重写个暴力的
@@ -10,6 +11,9 @@ update：
     还在考虑密码要不要隐写
     希望半小时写完，还要看数据结构呢
     登录错误信息反馈给用户
+
+    新增了登录选项
+    新增了抢占
 """
 
 import platform
@@ -64,6 +68,13 @@ post_atter = {
     "queryACIP":"0",
     "loginMethod":"1"
 }
+msg_dict = {
+    "aW51c2UsIGxvZ2luIGFnYWlu" : "多端登录",
+    "NTEy":"AC认证失败",
+    "dXNlcmlkIGVycm9yMQ==" : "账户不存在",
+    "QXV0aGVudGljYXRpb24gRmFpbCBFcnJDb2RlPTE2" : "非正常时段"
+}
+
 static_url = "http://www.msftconnecttest.com/redirect"
 dynamic_R6_data = ['0','1','2']
 def loading_config():
@@ -88,7 +99,9 @@ def loading_config():
             print("login_config.ini加载失败")
             e_exit()
     else:
+
         '''用户初始化配置'''
+        first_word()
         ini_data = []
         for i in range(3):
             if i == 0:
@@ -96,13 +109,17 @@ def loading_config():
             if i == 1:
                 ini_data.append(input("请输入上网密码："))
             if i == 2:
-                t = input("请输入运营商:\n联通【1】\n移动【2】\n单宽【3】\n")
+                t = input("请输入运营商:\n联通【1】\n移动【2】\n单宽【3】\n校内资源【4】\n校园网【5】\n")
                 if t == "1":
                     ini_data.append("unicom")
                 if t == "2":
                     ini_data.append("cmcc")
                 if t == "3":
                     ini_data.append("other")
+                if t == "4":
+                    ini_data.append("inside")
+                if t == "5":
+                    ini_data.append("zzulis")
         if len(ini_data) != 3:
             print("数据录入错误")
             e_exit()
@@ -176,25 +193,50 @@ def is_net_ok():
             return False
     except Exception as e:
         return False
-def print_msg(url):
-    msg_data = dict(parse_qs(urlsplit(url).query))
-    msg = msg_data['ErrorMsg'][0]
-    # print(msg)
-    '''
-    aW51c2UsIGxvZ2luIGFnYWlu 二次登陆
-NTEy AC
-dXNlcmlkIGVycm9yMQ== 账号不存在
-ErrorMsg为空 登陆成功
-    '''
-    if msg == "NTEy":
-        print(">>>登录结果：失败\n>>>原因：AC认证失败")
-        return False
-    elif msg == "dXNlcmlkIGVycm9yMQ==":
-        print(">>>登录结果：失败\n>>>原因：账户不存在")
-        return True
-    elif msg == "QXV0aGVudGljYXRpb24gRmFpbCBFcnJDb2RlPTE2":
-        print(">>>登录结果：失败\n>>>原因：非正常时段")
-        return True
+# def print_msg(url):
+#     msg_data = dict(parse_qs(urlsplit(url).query))
+#     msg = msg_data['ErrorMsg'][0]
+#     # print(msg)
+#
+#     if msg == "NTEy":
+#         print(">>>登录结果：失败\n>>>原因：AC认证失败")
+#         return False
+#     elif msg == "dXNlcmlkIGVycm9yMQ==":
+#         print(">>>登录结果：失败\n>>>原因：账户不存在")
+#         return True
+#     elif msg == "QXV0aGVudGljYXRpb24gRmFpbCBFcnJDb2RlPTE2":
+#         print(">>>登录结果：失败\n>>>原因：非正常时段")
+#         return True
+
+    # print(msg_data)
+def login(temp_url, temp_data, temp_headers):
+    flag = True
+    retry = 1
+    while flag and retry<4:
+        res = requests.post(temp_url, data=temp_data, headers=temp_headers)
+        time.sleep(1)
+        msg_data = dict(parse_qs(urlsplit(res.url).query))
+
+        if "ErrorMsg" in msg_data:
+        # 错误信息
+            msg = msg_data['ErrorMsg'][0]
+            if msg in msg_dict:
+                # 已知错误信息
+                print(">>>登录结果：失败\n>>>原因："+msg_dict[msg])
+                if msg == "aW51c2UsIGxvZ2luIGFnYWlu" or msg == "NTEy":
+                    print(">>>尝试解决：再次请求")
+                    retry = retry + 2
+                else:
+                    return False
+            else:
+                print(">>>登录结果：失败\n>>>原因：未知")
+                print("正在重试：第"+retry+"次")
+                retry = retry + 1
+        else:
+            print(">>>登录结果：失败\n>>>原因：登录成功")
+            return True
+    return False
+
 
 def word():
     """
@@ -203,40 +245,22 @@ def word():
     """
     print("======================Auto Login ZZULI Net V1.4======================\n")
     print("                                          by:mmciel 761998179@qq.com \n")
+    print("                                          微信公众号：并非一无所有       \n")
     print("=====================================================================")
+def first_word():
     print("使用说明：")
+    print("0.打开程序")
     print("1.本程序放到非桌面，右键将快捷发送到桌面会有更好体验")
     print("2.首次使用按照提示配置，配置文件与本程序同目录，删除后需要重新配置")
     print("3.后续使用双击程序即可")
-    print("PS：")
-    print("1.源码：移步：https://github.com/mmciel/Auto-Login-ZZULI-Python")
-    print("2.更新：请关注微信公众号：并非一无所有")
     print("=====================================================================")
-    # print(msg_data)
-def login(temp_url, temp_data, temp_headers):
-    """
-    提交登录信息，并测试是否链接到网络
-    :param temp_url: url
-    :param temp_data: post数据包
-    :param temp_headers: 请求头
-    :return: 真假
-    """
-    res = requests.post(temp_url, data=temp_data, headers=temp_headers)
-    time.sleep(1)
-    num = 1
-    while not is_net_ok():
 
-        if print_msg(res.url):
-            exit()
-
-        print("再次尝试...")
-        requests.post(temp_url, data=temp_data, headers=temp_headers)
-        time.sleep(1)
-        num = num+1
-        if num == 3 :
-            print("终止")
-            return False
-    return True
+# def is_link():
+#     code = requests.get("http://www.baidu.com")
+#     if(code.status_code == 200):
+#         return False
+#     else:
+#         return False
 if __name__ == "__main__":
     word()
     '''加载配置文件'''
@@ -249,27 +273,29 @@ if __name__ == "__main__":
     if "Windows" in system_version:
         # 系统是windows
         try:
-            # os.system('netsh wlan connect name=zzuli-student')
-            # time.sleep(1)
+            os.system('netsh wlan connect name=zzuli-student')
+            time.sleep(1)
             print("打开系统网络连接：zzuli-student")
         except:
             print("wifi连接失败，请检查设置或驱动！")
             e_exit()
         pass
     else:
-        # 系统是其他
-        print("系统非windows，请手动连接zzuli-student")
+        # 系统是linux
+        os.system('sudo ip link set wlan0 up')
+        os.system('sudo iw dev wlan0 scan | zzuli-student')
         pass
-    '''发送请求'''
-    real_url = get_real_url()
-    for i in range(len(dynamic_R6_data)):
-        print("正在尝试登录参数：R6-" + dynamic_R6_data[i])
-        user_data["DDDDD"] = "," + dynamic_R6_data[i] + "," + login_data[0] + "@" + login_data[2]
-        user_data["upass"] = login_data[1]
-        user_data["R6"] = dynamic_R6_data[i]
-
-        if login(real_url, user_data, headers):
-            flag = True
-            break
-        else:
-            continue
+    '''判断是否联网'''
+    if is_net_ok():
+        print("连接成功")
+        e_exit()
+    else:
+        '''发送请求'''
+        real_url = get_real_url()
+        for i in range(len(dynamic_R6_data)):
+            print("正在尝试登录参数：R6-" + dynamic_R6_data[i])
+            user_data["DDDDD"] = "," + dynamic_R6_data[i] + "," + login_data[0] + "@" + login_data[2]
+            user_data["upass"] = login_data[1]
+            user_data["R6"] = dynamic_R6_data[i]
+            if login(real_url, user_data, headers):
+                break
