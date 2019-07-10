@@ -233,7 +233,7 @@ def login(temp_url, temp_data, temp_headers):
                 print("正在重试：第"+retry+"次")
                 retry = retry + 1
         else:
-            print(">>>登录结果：失败\n>>>原因：登录成功")
+            print(">>>登录结果：失败\n>>>原因：异常终止")
             return True
     return False
 
