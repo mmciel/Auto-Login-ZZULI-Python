@@ -255,7 +255,7 @@ if __name__ == "__main__":
                 Log.log("再次尝试：[" + username + ":" + password + "]")
                 status = login(username, password)
                 count = count + 1
-        time.sleep(20)
+        time.sleep(1200)
 
 
 
