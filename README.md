@@ -1,3 +1,6 @@
+# 项目迁移至gitee
+- 2021年6月5日16:11:58
+- https://gitee.com/fang76199/Auto-Login-ZZULI-Python
 # zzuli 校园网自动登录助手
 
 ## 简介
